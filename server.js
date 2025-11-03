@@ -13,6 +13,10 @@ const swaggerUi = require('swagger-ui-express');
 // The project file is `swagger.js`, so require that instead of a non-existent module.
 const swaggerDocument = require('./swagger').swaggerSpec;
 
+app.get("/", (req, res) => {
+  res.send("Server is running successfully 🚀");
+});
+
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 const port = process.env.PORT || 4000;
