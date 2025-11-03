@@ -5,6 +5,11 @@ const User = require('../models/User');
 
 const createuser = async (req, res) => {
     try {
+        // Ensure DB is connected before attempting writes
+        if (mongoose.connection.readyState !== 1) {
+            console.error('Database not connected (readyState=', mongoose.connection.readyState, ')');
+            return res.status(503).json({ message: 'Service unavailable: database not connected' });
+        }
         // Protect against undefined req.body
         const { username, email, password } = req.body || {};
 
@@ -19,7 +24,10 @@ const createuser = async (req, res) => {
         res.status(201).json({ message: 'User created successfully', user: newUser });
     } catch (err) {
         console.error('Error creating user:', err);
-        res.status(500).json({ message: 'Internal server error' });
+        // For easier debugging expose the error message in non-production environments
+        const payload = { message: 'Internal server error' };
+        if (process.env.NODE_ENV !== 'production') payload.error = err.message;
+        res.status(500).json(payload);
     }
 };
 const getusers = async(req,res) =>{
@@ -53,6 +61,10 @@ const updateuser = async(req,res) =>{
         if (!mongoose.Types.ObjectId.isValid(userId)) {
             return res.status(400).json({ message: 'Invalid user id' });
         }
+        if (mongoose.connection.readyState !== 1) {
+            console.error('Database not connected (readyState=', mongoose.connection.readyState, ')');
+            return res.status(503).json({ message: 'Service unavailable: database not connected' });
+        }
         const { username, email, password } = req.body || {};
 
         // If email is being changed, ensure it's not already used by another user
@@ -77,17 +89,25 @@ const updateuser = async(req,res) =>{
         if (err && (err.code === 11000 || err.codeName === 'DuplicateKey')) {
             return res.status(409).json({ message: 'Duplicate value conflict', details: err.keyValue || null });
         }
-        res.status(500).json({ message: 'Internal server error' });
+        const payload = { message: 'Internal server error' };
+        if (process.env.NODE_ENV !== 'production') payload.error = err.message;
+        res.status(500).json(payload);
     }
 }
 const deleteuser = async(req,res) =>{
     try{
         const userId = req.params.id;
+        if (mongoose.connection.readyState !== 1) {
+            console.error('Database not connected (readyState=', mongoose.connection.readyState, ')');
+            return res.status(503).json({ message: 'Service unavailable: database not connected' });
+        }
         await User.findByIdAndDelete(userId);
         res.status(200).json({ message: 'User deleted successfully' });
     } catch (err) {
         console.error('Error deleting user:', err);
-        res.status(500).json({ message: 'Internal server error' });
+        const payload = { message: 'Internal server error' };
+        if (process.env.NODE_ENV !== 'production') payload.error = err.message;
+        res.status(500).json(payload);
     }
 }
 
