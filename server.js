@@ -1,9 +1,9 @@
 const express = require('express');
 const app = express();
-app.use(express.json());
 
-const bodyParser = require('body-parser');
-app.use(bodyParser.json());
+// Use Express built-in JSON parser. Do not call body parsing middleware after
+// exporting the app for serverless platforms.
+app.use(express.json());
 
 const userroutes = require('./routes/userroutes');
 app.use('/user', userroutes);
@@ -42,6 +42,14 @@ if (mongoUri) {
 }
 
 
-app.listen(port,() =>{
+// When running on Vercel/@vercel/node or other serverless platforms we should
+// export the Express `app` instead of calling `app.listen`. The Vercel Node
+// builder will invoke this module per-request. For local development we still
+// start a listening server.
+if (process.env.VERCEL) {
+  module.exports = app;
+} else {
+  app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
-})
+  });
+}

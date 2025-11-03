@@ -11,9 +11,12 @@ const options = {
       version: "1.0.0",
       description: "API documentation for my Node.js backend using Swagger",
     },
+    // Use a relative server URL so Swagger UI makes requests to the same
+    // origin where it's served (works both locally and in production). If you
+    // prefer an absolute URL in production, set SWAGGER_BASE_URL env var.
     servers: [
       {
-        url: "http://localhost:4000", // Root URL (remove the `/user` base path to avoid route collisions)
+        url: process.env.SWAGGER_BASE_URL || "/",
       },
     ],
   },
