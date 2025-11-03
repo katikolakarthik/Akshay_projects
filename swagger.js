@@ -1,5 +1,5 @@
 // swagger.js
-const swaggerJsDoc = require("swagger-jsdoc");
+const swaggerJsdoc = require("swagger-jsdoc");
 const swaggerUi = require("swagger-ui-express");
 
 const options = {
@@ -12,7 +12,7 @@ const options = {
     },
     servers: [
       {
-        url: "https://akshay-projects.vercel.app", // 🔁 replace with your Vercel URL
+        url: "https://akshay-projects.vercel.app",
         description: "Production server",
       },
       {
@@ -21,9 +21,9 @@ const options = {
       },
     ],
   },
-  apis: ["./routes/*.js"], // Adjust this to where your route files are
+  apis: ["./routes/*.js"], // Path to your route files
 };
 
-const swaggerSpec = swaggerJsDoc(options);
+const swaggerSpec = swaggerJsdoc(options);
 
 module.exports = { swaggerUi, swaggerSpec };
