@@ -17,7 +17,16 @@ app.get("/", (req, res) => {
   res.send("Server is running successfully 🚀");
 });
 
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+// app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+
+// Swagger UI setup
+app.use(
+  "/api-docs",
+  swaggerUi.serve,
+  swaggerUi.setup(swaggerDocument, {
+    customCss: ".swagger-ui .topbar { display: none }",
+  })
+);
 
 const port = process.env.PORT || 4000;
 const mongoose = require('mongoose');
