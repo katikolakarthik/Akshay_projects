@@ -17,14 +17,20 @@ app.get("/", (req, res) => {
   res.send("Server is running successfully 🚀");
 });
 
-// app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+// Serve the swagger JSON at a stable URL and tell the UI to load it from
+// there. This avoids absolute/localhost URLs being baked into the UI and
+// ensures assets are loaded relative to the /api-docs path in production.
+app.get('/api-docs/swagger.json', (req, res) => {
+  res.json(swaggerDocument);
+});
 
-// Swagger UI setup
+// Swagger UI setup (loads spec from /api-docs/swagger.json)
 app.use(
-  "/api-docs",
+  '/api-docs',
   swaggerUi.serve,
-  swaggerUi.setup(swaggerDocument, {
-    customCss: ".swagger-ui .topbar { display: none }",
+  swaggerUi.setup(null, {
+    swaggerOptions: { url: '/api-docs/swagger.json' },
+    customCss: '.swagger-ui .topbar { display: none }',
   })
 );
 
@@ -55,9 +61,11 @@ if (mongoUri) {
 // export the Express `app` instead of calling `app.listen`. The Vercel Node
 // builder will invoke this module per-request. For local development we still
 // start a listening server.
-if (process.env.VERCEL) {
-  module.exports = app;
-} else {
+// Export the app for serverless platforms. When run directly (node server.js)
+// this module will start a listening server for local development.
+module.exports = app;
+
+if (require.main === module) {
   app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
   });
