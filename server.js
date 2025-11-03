@@ -40,19 +40,25 @@ if (swaggerDistPath) {
   app.use("/api-docs/dist", express.static(swaggerDistPath));
 
   // Serve a tiny HTML page that references the dist assets and the JSON spec
+  // Use CDN-hosted assets as a fallback so styling works even if static asset
+  // serving has issues in the production environment.
   app.get("/api-docs", (req, res) => {
+    const cssUrl = 'https://unpkg.com/swagger-ui-dist@4.18.3/swagger-ui.css';
+    const bundleUrl = 'https://unpkg.com/swagger-ui-dist@4.18.3/swagger-ui-bundle.js';
+    const presetUrl = 'https://unpkg.com/swagger-ui-dist@4.18.3/swagger-ui-standalone-preset.js';
+
     const html = `<!doctype html>
 <html>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>API Docs</title>
-    <link rel="stylesheet" type="text/css" href="/api-docs/dist/swagger-ui.css" />
+    <link rel="stylesheet" type="text/css" href="${cssUrl}" />
   </head>
   <body>
     <div id="swagger-ui"></div>
-    <script src="/api-docs/dist/swagger-ui-bundle.js"></script>
-    <script src="/api-docs/dist/swagger-ui-standalone-preset.js"></script>
+    <script src="${bundleUrl}"></script>
+    <script src="${presetUrl}"></script>
     <script>
       window.onload = function() {
         const ui = SwaggerUIBundle({
