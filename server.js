@@ -21,17 +21,65 @@ app.get("/api-docs/swagger.json", (req, res) => {
   res.json(swaggerSpec);
 });
 
-// Swagger UI (load from swagger.json endpoint)
-app.use(
-  "/api-docs",
-  swaggerUi.serve,
-  swaggerUi.setup(swaggerSpec, {
-    swaggerOptions: {
-      url: "/api-docs/swagger.json",
-    },
-    customCss: ".swagger-ui .topbar { display: none }",
-  })
-);
+// Try to serve static Swagger UI assets from swagger-ui-dist and a small
+// HTML bootstrap page that loads the spec from /api-docs/swagger.json.
+// This avoids cases where the UI's asset requests end up routed to HTML
+// responses in some serverless setups, which causes the "Unexpected token '<'"
+// errors in the browser console.
+const path = require("path");
+let swaggerDistPath;
+try {
+  const swaggerUiDist = require("swagger-ui-dist");
+  swaggerDistPath = swaggerUiDist.getAbsoluteFSPath();
+} catch (err) {
+  swaggerDistPath = null;
+}
+
+if (swaggerDistPath) {
+  // Serve static assets under /api-docs/dist
+  app.use("/api-docs/dist", express.static(swaggerDistPath));
+
+  // Serve a tiny HTML page that references the dist assets and the JSON spec
+  app.get("/api-docs", (req, res) => {
+    const html = `<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>API Docs</title>
+    <link rel="stylesheet" type="text/css" href="/api-docs/dist/swagger-ui.css" />
+  </head>
+  <body>
+    <div id="swagger-ui"></div>
+    <script src="/api-docs/dist/swagger-ui-bundle.js"></script>
+    <script src="/api-docs/dist/swagger-ui-standalone-preset.js"></script>
+    <script>
+      window.onload = function() {
+        const ui = SwaggerUIBundle({
+          url: '/api-docs/swagger.json',
+          dom_id: '#swagger-ui',
+          presets: [SwaggerUIBundle.presets.apis, SwaggerUIStandalonePreset],
+          layout: 'BaseLayout'
+        });
+        window.ui = ui;
+      };
+    </script>
+  </body>
+</html>`;
+    res.setHeader("Content-Type", "text/html");
+    res.send(html);
+  });
+} else {
+  // Fallback to swagger-ui-express if dist isn't available
+  app.use(
+    "/api-docs",
+    swaggerUi.serve,
+    swaggerUi.setup(null, {
+      swaggerOptions: { url: "/api-docs/swagger.json" },
+      customCss: ".swagger-ui .topbar { display: none }",
+    })
+  );
+}
 
 // MongoDB connection
 const mongoUri = process.env.MONGODB_URL;
